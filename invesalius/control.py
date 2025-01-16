@@ -125,6 +125,8 @@ class Controller:
 
         Publisher.subscribe(self.LoadProject, "Load project data")
 
+        Publisher.subscribe(self.Reload_project,"Reload project")
+
         # for call cranioplasty implant by command line
         Publisher.subscribe(segment.run_cranioplasty_implant, "Create implant for cranioplasty")
 
@@ -355,6 +357,8 @@ class Controller:
         self.Slice._open_image_matrix(
             proj.matrix_filename, tuple(proj.matrix_shape), proj.matrix_dtype
         )
+        # self.Slice.apply_erosion(kernel_size=20)
+        # self.Slice.apply_opening(kernel_size=20)
 
         self.Slice.window_level = proj.level
         self.Slice.window_width = proj.window
@@ -598,9 +602,17 @@ class Controller:
         Publisher.sendMessage("End busy cursor")
 
     # -------------------------------------------------------------------------------------
+    def Reload_project(self,value):
+        print("Reload_project")
+        print(value)
+        self.Slice.apply_erosion(kernel_size=int(value))
+        # self.Slice.apply_opening(kernel_size=20)
+        self.LoadProject()
+        
 
     def LoadProject(self):
         proj = prj.Project()
+        print("LoadProject")
 
         const.THRESHOLD_OUTVALUE = proj.threshold_range[0]
         const.THRESHOLD_INVALUE = proj.threshold_range[1]
@@ -613,12 +625,15 @@ class Controller:
         self.Slice.spacing = proj.spacing
 
         Publisher.sendMessage("Load slice to viewer", mask_dict=proj.mask_dict)
+        # self.Slice.apply_erosion(kernel_size=20)
+        # self.Slice.apply_opening(kernel_size=20)
 
         Publisher.sendMessage("Load slice plane")
 
         Publisher.sendMessage(
             "Bright and contrast adjustment image", window=proj.window, level=proj.level
         )
+
         Publisher.sendMessage("Update window level value", window=proj.window, level=proj.level)
 
         Publisher.sendMessage("Set project name", proj_name=proj.name)
@@ -665,6 +680,8 @@ class Controller:
 
         # TODO: Check that this is needed with the new way of using affine
         #  now the affine should be at least the identity(4) and never None
+        # self.Slice.apply_erosion(kernel_size=20)
+        # self.Slice.apply_opening(kernel_size=20)
         if self.Slice.affine is not None:
             Publisher.sendMessage("Enable Go-to-Coord", status=True)
         else:

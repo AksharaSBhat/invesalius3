@@ -17,6 +17,7 @@
 #    detalhes.
 # --------------------------------------------------------------------------
 import os
+import cv2
 import tempfile
 from typing import TYPE_CHECKING, Optional, Tuple, Union
 
@@ -1854,6 +1855,32 @@ class Slice(metaclass=utils.Singleton):
 
     def has_affine(self) -> bool:
         return not np.allclose(self.affine, np.eye(4))
+    
+    def apply_erosion(self, kernel_size=3):
+        # Create a copy since we can't modify memmap directly
+        img_copy = np.array(self.matrix)
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        eroded = cv2.erode(img_copy, kernel, iterations=1)
+        
+        # Write back to memmap
+        self.matrix[:] = eroded
+        self.matrix.flush()
+        
+    def apply_dilation(self, kernel_size=3):
+        img_copy = np.array(self.matrix)
+
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        dilated = cv2.dilate(img_copy, kernel, iterations=1)
+        self.matrix[:] = dilated
+        self.matrix.flush()
+    
+    def apply_opening(self, kernel_size=3):
+        self.apply_erosion(kernel_size)
+        self.apply_dilation(kernel_size)
+    
+    def apply_closing(self, kernel_size=3):
+        self.apply_dilation(kernel_size)
+        self.apply_erosion(kernel_size)
 
 
 def _conv_area(x: np.ndarray, sx: float, sy: float, sz: float) -> float:
