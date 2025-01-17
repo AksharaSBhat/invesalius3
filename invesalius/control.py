@@ -125,7 +125,11 @@ class Controller:
 
         Publisher.subscribe(self.LoadProject, "Load project data")
 
-        Publisher.subscribe(self.Reload_project,"Reload project")
+        Publisher.subscribe(self.Reload_project_erode,"Erode and Reload")
+        Publisher.subscribe(self.Reload_project_dilate,"Dilate and Reload")
+        Publisher.subscribe(self.Reload_project_opening,"Opening and Reload")
+        Publisher.subscribe(self.Reload_project_closing,"Closing and Reload")
+        Publisher.subscribe(self.Reload_project_gradient,"Gradient and Reload")
 
         # for call cranioplasty implant by command line
         Publisher.subscribe(segment.run_cranioplasty_implant, "Create implant for cranioplasty")
@@ -602,11 +606,40 @@ class Controller:
         Publisher.sendMessage("End busy cursor")
 
     # -------------------------------------------------------------------------------------
-    def Reload_project(self,value):
-        print("Reload_project")
-        print(value)
-        self.Slice.apply_erosion(kernel_size=int(value))
-        # self.Slice.apply_opening(kernel_size=20)
+    def Reload_project_erode(self,kernel_size,iterations):
+        kernel_size = int(kernel_size)
+        iterations = int(iterations)
+        self.Slice.apply_erosion(kernel_size=kernel_size,iterations=iterations)
+        Publisher.sendMessage("Begin busy cursor")
+        print("Reload_project_erode")
+        self.LoadProject()
+    
+    def Reload_project_dilate(self,kernel_size,iterations):
+        kernel_size = int(kernel_size)
+        iterations = int(iterations)
+        self.Slice.apply_dilation(kernel_size=kernel_size,iterations=iterations)
+        Publisher.sendMessage("Begin busy cursor")
+        self.LoadProject()
+    
+    def Reload_project_opening(self,kernel_size,iterations):
+        kernel_size = int(kernel_size)
+        iterations = int(iterations)
+        self.Slice.apply_opening(kernel_size=kernel_size,iterations=iterations)
+        Publisher.sendMessage("Begin busy cursor")
+        self.LoadProject()
+    
+    def Reload_project_closing(self,kernel_size,iterations):
+        kernel_size = int(kernel_size)
+        iterations = int(iterations)
+        self.Slice.apply_closing(kernel_size=kernel_size,iterations=iterations)
+        Publisher.sendMessage("Begin busy cursor")
+        self.LoadProject()
+    
+    def Reload_project_gradient(self,kernel_size,iterations):
+        kernel_size = int(kernel_size)
+        iterations = int(iterations)
+        self.Slice.apply_gradient(kernel_size=kernel_size,iterations=iterations)
+        Publisher.sendMessage("Begin busy cursor")
         self.LoadProject()
         
 
