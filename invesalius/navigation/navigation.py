@@ -150,7 +150,10 @@ class UpdateNavigationScene(threading.Thread):
                 main_coil = self.navigation.main_coil
                 track_this = main_coil if self.navigation.track_coil else "probe"
                 # choose which object to track in slices and viewer_volume pointer
-                coord = coords[track_this]
+                # coord = coords[track_this]
+                # coord_ahead = coords[track_this + "_ahead"]
+                coord_ahead = coords[track_this]
+                coord = coords[track_this + "_ahead"]
 
                 # Remove probe, so that coords/m_imgs only contain coils
                 probe_coord = coords.pop("probe")
@@ -194,7 +197,8 @@ class UpdateNavigationScene(threading.Thread):
                 wx.CallAfter(
                     Publisher.sendMessage,
                     "Update volume viewer pointer",
-                    position=[coord[0], -coord[1], coord[2]],
+                    position_center=[coord[0], -coord[1], coord[2]],
+                    position_ahead=[coord_ahead[0], -coord_ahead[1], coord_ahead[2]],
                 )
 
                 if coil_visible:
@@ -475,6 +479,7 @@ class Navigation(metaclass=Singleton):
         self.m_change = tr.affine_matrix_from_points(
             self.all_fiducials[3:, :].T, self.all_fiducials[:3, :].T, shear=False, scale=False
         )
+        print(self.m_change)
 
     def OnRecordStylusOrientation(self, coord_raw):
         if self.m_change is not None:

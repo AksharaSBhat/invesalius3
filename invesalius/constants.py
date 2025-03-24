@@ -1006,7 +1006,7 @@ EFIELD_ROI_SIZE = 20
 #
 # Please do not set these to a lower value than 0.1 seconds; it will cause freezing on slower computers.
 SLEEP_NAVIGATION = 0.1
-SLEEP_COORDINATES = 0.1
+SLEEP_COORDINATES = 5
 
 BRAIN_OPACITY = 0.6
 N_CPU = psutil.cpu_count()

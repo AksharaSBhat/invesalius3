@@ -246,7 +246,25 @@ def corregistrate_object_dynamic(m_change, obj_data, coord_raw, icp):
         angles[2],
     )
 
-    return coord, m_img
+    # Compute the forward-facing point 60mm ahead in object-local space
+    offset_local = np.array([60.0, 0.0, 0.0, 1.0])  # 60mm forward in local x-direction
+
+    # Transform it to image space using the object's pose matrix
+    offset_global = m_img @ offset_local
+
+    # Extract position and orientation at that point
+    angles_offset = np.degrees(tr.euler_from_matrix(m_img, axes="sxyz"))
+
+    coord_offset = (
+        offset_global[0],
+        offset_global[1],
+        offset_global[2],
+        angles_offset[0],
+        angles_offset[1],
+        angles_offset[2],
+    )
+
+    return coord, m_img, coord_offset
 
 
 def corregistrate_object_static(m_change, obj_data, coord_raw, icp):
@@ -278,7 +296,25 @@ def corregistrate_object_static(m_change, obj_data, coord_raw, icp):
         angles[2],
     )
 
-    return coord, m_img
+    # Compute the forward-facing point 60mm ahead in object-local space
+    offset_local = np.array([60.0, 0.0, 0.0, 1.0])  # 60mm forward in local x-direction
+
+    # Transform it to image space using the object's pose matrix
+    offset_global = m_img @ offset_local
+
+    # Extract position and orientation at that point
+    angles_offset = np.degrees(tr.euler_from_matrix(m_img, axes="sxyz"))
+
+    coord_offset = (
+        offset_global[0],
+        offset_global[1],
+        offset_global[2],
+        angles_offset[0],
+        angles_offset[1],
+        angles_offset[2],
+    )
+
+    return coord, m_img, coord_offset
 
 
 def compute_marker_transformation(coord_raw, obj_id):
@@ -398,10 +434,16 @@ class CoordinateCorregistrate(threading.Thread):
                 m_imgs = {"probe": m_img_probe}
 
                 for coil_name in obj_datas:
-                    coord_coil, m_img_coil = corregistrate_object(
+                    coord_coil, m_img_coil, coord_offset = corregistrate_object(
                         m_change, obj_datas[coil_name], coord_raw, icp
                     )
                     coords[coil_name] = coord_coil
+                    coords[coil_name + "_ahead"] = coord_offset
+                    # coords[coil_name] = coord_offset
+                    # coords[coil_name] = {
+                    #     "center": coord_coil,
+                    #     "ahead": coord_offset
+                    # }
                     m_imgs[coil_name] = m_img_coil
 
                 # LUKATODO: this is an arbitrary coil, so efields/tracts work correctly with 1 coil but may bug out when using multiple

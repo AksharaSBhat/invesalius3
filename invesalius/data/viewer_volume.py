@@ -820,7 +820,7 @@ class Viewer(wx.Panel):
         for actor in actors:
             self.ren.RemoveActor(actor)
 
-    def AddPointReference(self, position, radius=1, colour=(1, 0, 0)):
+    def AddPointReference(self, position, radius=5, colour=(1, 0, 0)):
         """
         Add a point representation in the given x,y,z position with a optional
         radius and colour.
@@ -830,7 +830,7 @@ class Viewer(wx.Panel):
         point.SetRadius(radius)
 
         mapper = vtkPolyDataMapper()
-        mapper.SetInput(point.GetOutput())
+        mapper.SetInputConnection(point.GetOutputPort())
 
         p = vtkProperty()
         p.SetColor(colour)
@@ -1374,20 +1374,27 @@ class Viewer(wx.Panel):
         cam.SetFocalPoint(cam_focus)
         cam.SetPosition(cam_pos)
 
-    def UpdatePointer(self, position):
+    def UpdatePointer(self, position_center=None, position_ahead=None):
         """
-        Update the position of the pointer sphere. It is done when the navigation without object is on,
-        slice planes are moved or a new point is selected from the volume viewer.
+        Update the position of the pointer spheres: center (red) and ahead (yellow).
         """
-        # Update the pointer sphere.
+        # print(position_ahead,position_center)
+
+        # Create if not already
         if self.pointer_actor is None:
             self.CreatePointer()
+        if not hasattr(self, "pointer_ahead_actor") or self.pointer_ahead_actor is None:
+            self.RemoveAllPointsReference()
+            self.AddPointReference(position_center, 5, (1, 1, 0))
+            self.pointer_ahead_actor = self.points_reference[-1]
+        else:
+            self.RemoveAllPointsReference()
+            self.AddPointReference(position_center, 5, (1, 1, 0))
+            self.pointer_ahead_actor = self.points_reference[-1]
 
-        # Hide the pointer during targeting, as it would cover the coil center donut
         self.pointer_actor.SetVisibility(not self.target_mode)
+        self.pointer_actor.SetPosition(position_ahead)
 
-        self.pointer_actor.SetPosition(position)
-        # Update the render window manually, as it is not updated automatically when not navigating.
         if not self.nav_status:
             self.UpdateRender()
 
